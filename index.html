@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Voting</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(120deg, #1e3c72, #2a5298);
+            color: white;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            animation: fadeIn 2s ease-in-out;
+        }
+        h1 {
+            font-size: 3rem;
+            animation: pulse 1.5s infinite;
+        }
+        button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 1.2rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        button:hover {
+            transform: scale(1.1);
+        }
+        .timer {
+            font-size: 2rem;
+            margin: 20px 0;
+        }
+        .results {
+            margin-top: 20px;
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: white;
+            opacity: 0.7;
+            animation: fall 3s infinite;
+        }
+        @keyframes fall {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(100vh); }
+        }
+    </style>
+</head>
+<body>
+    <audio autoplay loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-happyrock.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div class="container">
+        <h1>Anonymous Voting</h1>
+        <div class="timer">Time left: <span id="time-left">120</span> seconds</div>
+        <div id="options">
+            <button onclick="castVote('Option A')">Option A</button>
+            <button onclick="castVote('Option B')">Option B</button>
+            <button onclick="castVote('Option C')">Option C</button>
+        </div>
+        <div class="results" id="results">
+            <h2>Results:</h2>
+            <ul id="result-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        let timer = 120;
+        const results = {};
+        const options = ['Option A', 'Option B', 'Option C'];
+
+        // Initialize results
+        options.forEach(option => results[option] = 0);
+
+        // Countdown timer
+        const countdown = setInterval(() => {
+            timer--;
+            document.getElementById('time-left').textContent = timer;
+            if (timer <= 0) {
+                clearInterval(countdown);
+                endVoting();
+            }
+        }, 1000);
+
+        function castVote(option) {
+            results[option]++;
+            alert(`You voted for ${option}!`);
+        }
+
+        function endVoting() {
+            document.getElementById('options').style.display = 'none';
+            const resultList = document.getElementById('result-list');
+            document.getElementById('results').style.display = 'block';
+
+            Object.keys(results).forEach(option => {
+                const li = document.createElement('li');
+                li.textContent = `${option}: ${results[option]} votes`;
+                resultList.appendChild(li);
+            });
+
+            generateConfetti();
+        }
+
+        function generateConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.animationDuration = `${3 + Math.random() * 2}s`;
+                document.body.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+    </script>
+</body>
+</html>
