@@ -11,7 +11,6 @@
             font-family: Arial, sans-serif;
             background: linear-gradient(120deg, #1e3c72, #2a5298);
             color: white;
-            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,14 +18,12 @@
         }
         .container {
             text-align: center;
-            animation: fadeIn 2s ease-in-out;
         }
         h1 {
             font-size: 3rem;
-            animation: pulse 1.5s infinite;
         }
         button {
-            padding: 15px 30px;
+            padding: 10px 20px;
             margin: 10px;
             font-size: 1.2rem;
             background: #4CAF50;
@@ -34,7 +31,6 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: transform 0.3s;
         }
         button:hover {
             transform: scale(1.1);
@@ -43,131 +39,77 @@
             font-size: 2rem;
             margin: 20px 0;
         }
-        .results {
-            margin-top: 20px;
-            display: none;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: white;
-            opacity: 0.7;
-            animation: fall 3s infinite;
-        }
-        @keyframes fall {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(100vh); }
-        }
     </style>
 </head>
 <body>
-    <audio autoplay loop>
-        <source src="https://www.bensound.com/bensound-music/bensound-happyrock.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-
     <div class="container">
         <h1>Anonymous Voting</h1>
         <div class="timer">Time left: <span id="time-left">120</span> seconds</div>
-        <div id="options">
-            <button onclick="castVote('Option A')">Option A</button>
-            <button onclick="castVote('Option B')">Option B</button>
-            <button onclick="castVote('Option C')">Option C</button>
-        </div>
-        <div class="results" id="results">
-            <h2>Results:</h2>
-            <ul id="result-list"></ul>
-        </div>
+        <div id="options"></div>
     </div>
 
     <script>
-        let timer = 120;
-        const results = {};
-        const options = ['Option A', 'Option B', 'Option C'];
+        const sessionGuid = new URLSearchParams(window.location.search).get('sessionGuid');
 
-        // Initialize results
-        options.forEach(option => results[option] = 0);
-
-        // Countdown timer
-        const countdown = setInterval(() => {
-            timer--;
-            document.getElementById('time-left').textContent = timer;
-            if (timer <= 0) {
-                clearInterval(countdown);
-                endVoting();
-            }
-        }, 1000);
-
-        // Parse sessionGuid from URL
-const urlParams = new URLSearchParams(window.location.search);
-const sessionGuid = urlParams.get('sessionGuid');
-if (!sessionGuid) {
-    alert("Invalid voting session!");
-    document.body.innerHTML = "<h1>Invalid Session</h1>";
-    throw new Error("Invalid session GUID");
-}
-
-// Updated castVote function
-function castVote(option) {
-    fetch('http://3.15.8.163:5000/vote', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            sessionGuid: sessionGuid,
-            userId: "anonymous", // Replace with actual user ID if needed
-            vote: option
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(`You voted for ${option}!`);
-        } else {
-            alert(`Error: ${data.message}`);
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("An error occurred while submitting your vote.");
-    });
-}
-        function endVoting() {
-            document.getElementById('options').style.display = 'none';
-            const resultList = document.getElementById('result-list');
-            document.getElementById('results').style.display = 'block';
-
-            Object.keys(results).forEach(option => {
-                const li = document.createElement('li');
-                li.textContent = `${option}: ${results[option]} votes`;
-                resultList.appendChild(li);
-            });
-
-            generateConfetti();
+        if (!sessionGuid) {
+            alert("Invalid session GUID");
+            document.body.innerHTML = "<h1>Invalid Session</h1>";
+            throw new Error("Session GUID not provided");
         }
 
-        function generateConfetti() {
-            for (let i = 0; i < 100; i++) {
-                const confetti = document.createElement('div');
-                confetti.classList.add('confetti');
-                confetti.style.left = `${Math.random() * 100}vw`;
-                confetti.style.animationDelay = `${Math.random() * 2}s`;
-                confetti.style.animationDuration = `${3 + Math.random() * 2}s`;
-                document.body.appendChild(confetti);
+        // Fetch and display voting options
+        async function fetchOptions() {
+            try {
+                const response = await fetch(`http://3.15.8.163:5000/options?sessionGuid=${sessionGuid}`);
+                const data = await response.json();
 
-                setTimeout(() => confetti.remove(), 5000);
+                if (data.success) {
+                    const optionsDiv = document.getElementById('options');
+                    optionsDiv.innerHTML = ''; // Clear existing buttons
+                    data.options.forEach(option => {
+                        const button = document.createElement('button');
+                        button.textContent = option;
+                        button.onclick = () => castVote(option);
+                        optionsDiv.appendChild(button);
+                    });
+                } else {
+                    alert(`Error fetching options: ${data.message}`);
+                }
+            } catch (error) {
+                console.error("Error fetching options:", error);
+                alert("Failed to fetch voting options.");
             }
         }
+
+        // Cast a vote
+        async function castVote(option) {
+            try {
+                const response = await fetch('http://3.15.8.163:5000/vote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sessionGuid: sessionGuid,
+                        userId: 'anonymous', // Replace with actual user ID if available
+                        vote: option,
+                    }),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`You voted for ${option}!`);
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            } catch (error) {
+                console.error("Error casting vote:", error);
+                alert("An error occurred while submitting your vote.");
+            }
+        }
+
+        // Initialize options on page load
+        fetchOptions();
     </script>
 </body>
 </html>
