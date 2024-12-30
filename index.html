@@ -31,11 +31,16 @@
         button:hover {
             background-color: #16a085;
         }
+        .error {
+            color: red;
+            font-size: 1.5rem;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Vote for Your Favorite Option!</h1>
+        <h1 id="title">Vote for Your Favorite Option!</h1>
         <p id="user-info"></p>
         <div id="options">
             <button onclick="castVote('Option 1')">Option 1</button>
@@ -52,13 +57,17 @@
         const userName = urlParams.get('userName');
         const sessionGuid = urlParams.get('sessionGuid');
 
-        // Display user info
+        // Validate query parameters
         const userInfo = document.getElementById('user-info');
-        if (userId && userName && sessionGuid) {
-            userInfo.textContent = `Welcome, ${userName} (ID: ${userId})`;
+        const optionsDiv = document.getElementById('options');
+        const title = document.getElementById('title');
+
+        if (!userId || !userName || !sessionGuid) {
+            userInfo.innerHTML = '<span class="error">Error: Missing or invalid voting parameters.</span>';
+            optionsDiv.style.display = 'none';
+            title.textContent = "Invalid Voting Session";
         } else {
-            userInfo.textContent = "Error: Missing user information.";
-            document.getElementById('options').style.display = 'none';
+            userInfo.textContent = `Welcome, ${userName} (ID: ${userId})`;
         }
 
         // Track voting state
@@ -71,7 +80,7 @@
             }
 
             // Send vote to the server
-            fetch('http://127.0.0.1:5000/vote', {
+            fetch('https://your-backend-api-url/vote', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
