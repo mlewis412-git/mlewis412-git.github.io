@@ -73,39 +73,40 @@
         // Track voting state
         let hasVoted = false;
 
-        function castVote(option) {
-            if (hasVoted) {
-                alert("You have already voted!");
-                return;
-            }
+     function castVote(option) {
+    if (hasVoted) {
+        alert("You have already voted!");
+        return;
+    }
 
-            // Send vote to the server
-            fetch('https://your-backend-api-url/vote', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userId: userId,
-                    userName: userName,
-                    sessionGuid: sessionGuid,
-                    vote: option
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('result').textContent = `Thank you for voting for ${option}!`;
-                    hasVoted = true;
-                } else {
-                    alert("Error: " + data.message);
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("An error occurred while submitting your vote.");
-            });
+    // Send vote to the server
+    fetch('http://3.15.8.163/vote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            userId: userId,
+            userName: userName,
+            sessionGuid: sessionGuid,
+            vote: option
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('result').textContent = `Thank you for voting for ${option}!`;
+            hasVoted = true;
+        } else {
+            alert("Error: " + data.message);
         }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("An error occurred while submitting your vote.");
+    });
+}
+
     </script>
 </body>
 </html>
