@@ -6,19 +6,31 @@
     <title>Voting Results</title>
     <script>
         async function fetchResults(sessionGuid) {
-            const response = await fetch(`http://0.0.0.0:5000/results?sessionGuid=${sessionGuid}`);
-            if (response.ok) {
-                const results = await response.json();
-                console.log("Voting Results:", results);
+            try {
+                const response = await fetch(`http://0.0.0.0:5000/results?sessionGuid=${sessionGuid}`);
+                if (response.ok) {
+                    const results = await response.json();
+                    console.log("Voting Results:", results);
 
-                const resultsDiv = document.getElementById("results");
-                for (const [option, votes] of Object.entries(results)) {
-                    const resultItem = document.createElement("p");
-                    resultItem.textContent = `${option}: ${votes} votes`;
-                    resultsDiv.appendChild(resultItem);
+                    if (Object.keys(results).length === 0) {
+                        document.getElementById("results").textContent = "No votes recorded for this session.";
+                        return;
+                    }
+
+                    const resultsDiv = document.getElementById("results");
+                    for (const [option, votes] of Object.entries(results)) {
+                        const resultItem = document.createElement("p");
+                        resultItem.textContent = `${option}: ${votes} vote(s)`;
+                        resultsDiv.appendChild(resultItem);
+                    }
+                } else {
+                    const errorMessage = await response.text();
+                    console.error("Failed to fetch results:", errorMessage);
+                    document.getElementById("results").textContent = "Failed to fetch results. Please try again later.";
                 }
-            } else {
-                console.error("Failed to fetch results.");
+            } catch (error) {
+                console.error("Error connecting to the backend:", error);
+                document.getElementById("results").textContent = "An error occurred while fetching results.";
             }
         }
 
@@ -32,7 +44,7 @@
             if (sessionGuid) {
                 fetchResults(sessionGuid);
             } else {
-                document.getElementById("results").textContent = "No session GUID provided!";
+                document.getElementById("results").textContent = "No session GUID provided in the URL!";
             }
         };
     </script>
