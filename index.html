@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voting Results</title>
+    <title>Voting</title>
     <script>
         async function fetchResults(sessionGuid) {
             try {
-               const response = await fetch(`https://3.15.8.163:5000/results?sessionGuid=${sessionGuid}`);
+                const response = await fetch(`https://3.15.8.163:5000/results?sessionGuid=${sessionGuid}`);
                 if (response.ok) {
                     const results = await response.json();
                     console.log("Voting Results:", results);
@@ -18,6 +18,7 @@
                     }
 
                     const resultsDiv = document.getElementById("results");
+                    resultsDiv.innerHTML = ""; // Clear previous results
                     for (const [option, votes] of Object.entries(results)) {
                         const resultItem = document.createElement("p");
                         resultItem.textContent = `${option}: ${votes} vote(s)`;
@@ -34,13 +35,45 @@
             }
         }
 
-        function getSessionGuid() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('sessionGuid');
+        async function submitVote(sessionGuid, userId, vote) {
+            try {
+                const response = await fetch('https://3.15.8.163:5000/vote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ sessionGuid, userId, vote }),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    fetchResults(sessionGuid); // Refresh results after submitting a vote
+                } else {
+                    console.error(result.message);
+                    alert('Failed to submit vote: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error submitting vote:', error);
+                alert('An error occurred while submitting the vote.');
+            }
+        }
+
+        function handleVote() {
+            const sessionGuid = new URLSearchParams(window.location.search).get('sessionGuid');
+            const userId = document.getElementById('userId').value;
+            const vote = document.getElementById('vote').value;
+
+            if (!sessionGuid || !userId || !vote) {
+                alert('All fields are required.');
+                return;
+            }
+
+            submitVote(sessionGuid, userId, vote);
         }
 
         window.onload = () => {
-            const sessionGuid = getSessionGuid();
+            const sessionGuid = new URLSearchParams(window.location.search).get('sessionGuid');
             if (sessionGuid) {
                 fetchResults(sessionGuid);
             } else {
@@ -50,7 +83,17 @@
     </script>
 </head>
 <body>
-    <h1>Voting Results</h1>
+    <h1>Vote for an Option</h1>
+    <div>
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" placeholder="Enter your user ID">
+    </div>
+    <div>
+        <label for="vote">Vote:</label>
+        <input type="text" id="vote" placeholder="Enter your vote">
+    </div>
+    <button onclick="handleVote()">Submit Vote</button>
+    <h2>Voting Results</h2>
     <div id="results"></div>
 </body>
 </html>
