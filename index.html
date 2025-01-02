@@ -3,113 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anonymous Voting</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(120deg, #1e3c72, #2a5298);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+    <title>Voting Results</title>
+    <script>
+        async function fetchResults(sessionGuid) {
+            const response = await fetch(`http://0.0.0.0:5000/results?sessionGuid=${sessionGuid}`);
+            if (response.ok) {
+                const results = await response.json();
+                console.log("Voting Results:", results);
+
+                const resultsDiv = document.getElementById("results");
+                for (const [option, votes] of Object.entries(results)) {
+                    const resultItem = document.createElement("p");
+                    resultItem.textContent = `${option}: ${votes} votes`;
+                    resultsDiv.appendChild(resultItem);
+                }
+            } else {
+                console.error("Failed to fetch results.");
+            }
         }
-        .container {
-            text-align: center;
+
+        function getSessionGuid() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('sessionGuid');
         }
-        h1 {
-            font-size: 3rem;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 10px;
-            font-size: 1.2rem;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            transform: scale(1.1);
-        }
-        .timer {
-            font-size: 2rem;
-            margin: 20px 0;
-        }
-    </style>
+
+        window.onload = () => {
+            const sessionGuid = getSessionGuid();
+            if (sessionGuid) {
+                fetchResults(sessionGuid);
+            } else {
+                document.getElementById("results").textContent = "No session GUID provided!";
+            }
+        };
+    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>Anonymous Voting</h1>
-        <div class="timer">Time left: <span id="time-left">120</span> seconds</div>
-        <div id="options"></div>
-    </div>
-
-    <script>
-        const sessionGuid = new URLSearchParams(window.location.search).get('sessionGuid');
-
-        if (!sessionGuid) {
-            alert("Invalid session GUID");
-            document.body.innerHTML = "<h1>Invalid Session</h1>";
-            throw new Error("Session GUID not provided");
-        }
-
-        // Fetch and display voting options
-        async function fetchOptions() {
-            try {
-                const response = await fetch(`http://3.15.8.163:5000/options?sessionGuid=${sessionGuid}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    const optionsDiv = document.getElementById('options');
-                    optionsDiv.innerHTML = ''; // Clear existing buttons
-                    data.options.forEach(option => {
-                        const button = document.createElement('button');
-                        button.textContent = option;
-                        button.onclick = () => castVote(option);
-                        optionsDiv.appendChild(button);
-                    });
-                } else {
-                    alert(`Error fetching options: ${data.message}`);
-                }
-            } catch (error) {
-                console.error("Error fetching options:", error);
-                alert("Failed to fetch voting options.");
-            }
-        }
-
-        // Cast a vote
-        async function castVote(option) {
-            try {
-                const response = await fetch('http://3.15.8.163:5000/vote', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        sessionGuid: sessionGuid,
-                        userId: 'anonymous', // Replace with actual user ID if available
-                        vote: option,
-                    }),
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    alert(`You voted for ${option}!`);
-                } else {
-                    alert(`Error: ${data.message}`);
-                }
-            } catch (error) {
-                console.error("Error casting vote:", error);
-                alert("An error occurred while submitting your vote.");
-            }
-        }
-
-        // Initialize options on page load
-        fetchOptions();
-    </script>
+    <h1>Voting Results</h1>
+    <div id="results"></div>
 </body>
 </html>
