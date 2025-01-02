@@ -7,7 +7,7 @@
     <script>
         async function fetchResults(sessionGuid) {
             try {
-                const response = await fetch(`http://0.0.0.0:5000/results?sessionGuid=${sessionGuid}`);
+               const response = await fetch(`http://3.15.8.163:5000/results?sessionGuid=${sessionGuid}`);
                 if (response.ok) {
                     const results = await response.json();
                     console.log("Voting Results:", results);
