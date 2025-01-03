@@ -1,221 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepe Voting Contest</title>
-    <style>
-        /* General reset */
-        body, html {
-            margin: 0;
-            padding: 0;
-            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
-            background: linear-gradient(to bottom right, #00ff00, #008000);
-            color: white;
-            overflow-x: hidden;
-        }
-
-        /* Container styling */
-        .container {
-            text-align: center;
-            padding: 20px;
-        }
-
-        /* Header styling */
-        h1 {
-            font-size: 3rem;
-            color: #00ff7f;
-            text-shadow: 3px 3px 5px #004d00;
-            animation: glow 1.5s infinite alternate;
-        }
-
-        h2 {
-            color: #ffdd00;
-            text-shadow: 2px 2px 4px #000;
-        }
-
-        /* Form styling */
-        form {
-            margin: 20px auto;
-            display: inline-block;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0px 0px 15px 5px #fff;
-            animation: bounce 2s infinite;
-        }
-
-        input[type="text"] {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: none;
-            width: 250px;
-            outline: none;
-            font-size: 1.1rem;
-            box-shadow: 2px 2px 4px #004d00;
-        }
-
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            background: #00b300;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 3px 3px 5px #004d00;
-            transition: transform 0.2s ease, background-color 0.2s ease;
-        }
-
-            button:hover {
-                transform: scale(1.1);
-                background: #007700;
-            }
-
-        /* Voting results styling */
-        .results {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 10px;
-            box-shadow: 0px 0px 15px 5px #fff;
-        }
-
-        /* Animations */
-        @keyframes glow {
-            from {
-                text-shadow: 3px 3px 5px #00ff7f;
-            }
-
-            to {
-                text-shadow: 3px 3px 15px #00ff7f;
-            }
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-
-            40% {
-                transform: translateY(-15px);
-            }
-
-            60% {
-                transform: translateY(-7px);
-            }
-        }
-
-        /* Footer Pepe animation */
-        .footer {
-            margin-top: 40px;
-        }
-
-        .dancing-pepe {
-            width: 150px;
-            animation: spin 5s infinite linear;
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🐸 Welcome to the Pepe Contest! 🐸</h1>
-        <h2>Vote for an Option</h2>
-        <form id="voteForm">
-            <label for="userId">User ID:</label><br>
-            <input type="text" id="userId" name="userId" placeholder="Enter your ID" required><br>
-            <label for="vote">Vote:</label><br>
-            <input type="text" id="vote" name="vote" placeholder="Enter your vote" required><br>
-            <button type="button" onclick="submitVote()">Submit Vote</button>
-        </form>
-        <div class="results">
-            <h3>Voting Results</h3>
-            <p id="results">Results will appear here...</p>
-        </div>
+<div class="container">
+    <h1>🐸 Welcome to the Pepe Contest! 🐸</h1>
+    <h2>Vote for an Option</h2>
+    <form id="voteForm">
+        <label for="vote">Select Your Option:</label><br>
+        <select id="vote" name="vote" required>
+            <option value="" disabled selected>Loading options...</option>
+        </select><br>
+        <button type="button" onclick="submitVote()">Submit Vote</button>
+    </form>
+    <div class="results">
+        <h3>Voting Results</h3>
+        <p id="results">Results will appear here...</p>
     </div>
+</div>
 
-    <div class="footer">
-        <img class="dancing-pepe" src="https://placekitten.com/150/150" alt="Dancing Pepe">
-    </div>
+<script>
+    // Fetch options dynamically from the backend
+    function loadOptions() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionGuid = urlParams.get("sessionGuid");
 
-
-    <script>
-        function fetchResults() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sessionGuid = urlParams.get("sessionGuid");
-
-            if (!sessionGuid) {
-                document.getElementById("results").textContent = "Session GUID is missing!";
-                return;
-            }
-
-            fetch(`http://3.15.8.163:5000/results?sessionGuid=${sessionGuid}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        let results = "";
-                        for (const [option, count] of Object.entries(data)) {
-                            results += `${option}: ${count} votes\n`;
-                        }
-                        document.getElementById("results").textContent = results;
-                    } else {
-                        document.getElementById("results").textContent = "Error fetching results: " + data.message;
-                    }
-                })
-                .catch(error => {
-                    document.getElementById("results").textContent = "Failed to fetch results. Please try again.";
-                });
+        if (!sessionGuid) {
+            document.getElementById("results").textContent = "Session GUID is missing!";
+            return;
         }
 
-        // Automatically fetch results when the page loads
-        window.onload = fetchResults;
-    </script>
+        fetch(`http://3.15.8.163:5000/options?sessionGuid=${sessionGuid}`)
+            .then(response => response.json())
+            .then(data => {
+                const voteSelect = document.getElementById("vote");
+                voteSelect.innerHTML = ""; // Clear existing options
 
-
-    <script>
-        function submitVote() {
-            const userId = document.getElementById("userId").value;
-            const vote = document.getElementById("vote").value;
-
-            // Extract sessionGuid from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const sessionGuid = urlParams.get("sessionGuid");
-
-            if (!sessionGuid) {
-                document.getElementById("results").textContent = "Session GUID is missing!";
-                return;
-            }
-
-            fetch("http://3.15.8.163:5000/vote", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ sessionGuid, userId, vote })
+                if (data.success) {
+                    data.options.forEach(option => {
+                        const opt = document.createElement("option");
+                        opt.value = option;
+                        opt.textContent = option;
+                        voteSelect.appendChild(opt);
+                    });
+                } else {
+                    voteSelect.innerHTML = `<option value="" disabled>${data.message}</option>`;
+                }
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById("results").textContent = "Vote submitted successfully!";
-                    } else {
-                        document.getElementById("results").textContent = "Error: " + data.message;
-                    }
-                })
-                .catch(error => {
-                    document.getElementById("results").textContent = "Failed to submit vote. Please try again.";
-                });
+            .catch(error => {
+                console.error("Error loading options:", error);
+                document.getElementById("results").textContent = "Failed to load options.";
+            });
+    }
+
+    // Submit vote function
+    function submitVote() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionGuid = urlParams.get("sessionGuid");
+        const vote = document.getElementById("vote").value;
+
+        if (!sessionGuid || !vote) {
+            document.getElementById("results").textContent = "Please select an option!";
+            return;
         }
-    </script>
-</body>
-</html>
+
+        fetch("http://3.15.8.163:5000/vote", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ sessionGuid, vote, userId: "example-user-id" }) // Replace 'example-user-id' with actual Discord ID if available
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("results").textContent = "Vote submitted successfully!";
+                } else {
+                    document.getElementById("results").textContent = "Error: " + data.message;
+                }
+            })
+            .catch(error => {
+                document.getElementById("results").textContent = "Failed to submit vote. Please try again.";
+            });
+    }
+
+    // Load options on page load
+    window.onload = loadOptions;
+</script>
