@@ -1,84 +1,85 @@
-<div class="container">
-    <h1>🐸 Welcome to the Pepe Contest! 🐸</h1>
-    <h2>Vote for an Option</h2>
-    <form id="voteForm">
-        <label for="vote">Select Your Option:</label><br>
-        <select id="vote" name="vote" required>
-            <option value="" disabled selected>Loading options...</option>
-        </select><br>
-        <button type="button" onclick="submitVote()">Submit Vote</button>
-    </form>
-    <div class="results">
-        <h3>Voting Results</h3>
-        <p id="results">Results will appear here...</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pepe Contest</title>
+</head>
+<body>
+    <div>
+        <h1>🐸 Welcome to the Pepe Contest! 🐸</h1>
+        <h2>Vote for an Option</h2>
+        <form id="voteForm">
+            <label for="vote">Select Your Option:</label><br>
+            <select id="vote" name="vote" required>
+                <option value="" disabled selected>Loading options...</option>
+            </select><br>
+            <button type="button" onclick="submitVote()">Submit Vote</button>
+        </form>
+        <div>
+            <h3>Voting Results</h3>
+            <p id="results">Results will appear here...</p>
+        </div>
     </div>
-</div>
 
-<script>
-    // Fetch options dynamically from the backend
-    function loadOptions() {
+    <script>
         const urlParams = new URLSearchParams(window.location.search);
         const sessionGuid = urlParams.get("sessionGuid");
+        const userId = urlParams.get("userId");
 
-        if (!sessionGuid) {
-            document.getElementById("results").textContent = "Session GUID is missing!";
-            return;
+        if (!sessionGuid || !userId) {
+            alert("Missing session GUID or user ID!");
         }
 
-        fetch(`http://3.15.8.163:5000/options?sessionGuid=${sessionGuid}`) // Update with your Flask server URL
-            .then(response => response.json())
-            .then(data => {
-                const voteSelect = document.getElementById("vote");
-                voteSelect.innerHTML = ""; // Clear existing options
-
-                if (data.success) {
-                    data.options.forEach(option => {
-                        const opt = document.createElement("option");
-                        opt.value = option;
-                        opt.textContent = option;
-                        voteSelect.appendChild(opt);
-                    });
-                } else {
-                    voteSelect.innerHTML = `<option value="" disabled>${data.message}</option>`;
-                }
-            })
-            .catch(error => {
-                console.error("Error loading options:", error);
-                document.getElementById("results").textContent = "Failed to load options.";
-            });
-    }
-
-    // Submit vote function
-    function submitVote() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionGuid = urlParams.get("sessionGuid");
-        const vote = document.getElementById("vote").value;
-
-        if (!sessionGuid || !vote) {
-            document.getElementById("results").textContent = "Please select an option!";
-            return;
+        function loadOptions() {
+            fetch(`http://3.15.8.163:5000/options?sessionGuid=${sessionGuid}`)
+                .then(response => response.json())
+                .then(data => {
+                    const voteSelect = document.getElementById("vote");
+                    voteSelect.innerHTML = "";
+                    if (data.success) {
+                        data.options.forEach(option => {
+                            const opt = document.createElement("option");
+                            opt.value = option;
+                            opt.textContent = option;
+                            voteSelect.appendChild(opt);
+                        });
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading options:", error);
+                });
         }
 
-        fetch("http://3.15.8.163:5000/vote", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ sessionGuid, vote, userId: "example-user-id" }) // Replace 'example-user-id' with actual Discord ID if available
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById("results").textContent = "Vote submitted successfully!";
-                } else {
-                    document.getElementById("results").textContent = "Error: " + data.message;
-                }
-            })
-            .catch(error => {
-                document.getElementById("results").textContent = "Failed to submit vote. Please try again.";
-            });
-    }
+        function submitVote() {
+            const vote = document.getElementById("vote").value;
+            if (!vote) {
+                alert("Please select an option.");
+                return;
+            }
 
-    // Load options on page load
-    window.onload = loadOptions;
-</script>
+            fetch("http://3.15.8.163:5000/vote", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ sessionGuid, userId, vote })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("results").textContent = "Vote submitted successfully!";
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error submitting vote:", error);
+                });
+        }
+
+        loadOptions();
+    </script>
+</body>
+</html>
