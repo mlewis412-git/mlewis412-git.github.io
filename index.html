@@ -149,24 +149,67 @@
         <img class="dancing-pepe" src="https://placekitten.com/150/150" alt="Dancing Pepe">
     </div>
 
+
+    <script>
+        function fetchResults() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionGuid = urlParams.get("sessionGuid");
+
+            if (!sessionGuid) {
+                document.getElementById("results").textContent = "Session GUID is missing!";
+                return;
+            }
+
+            fetch(`http://3.15.8.163:5000/results?sessionGuid=${sessionGuid}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let results = "";
+                        for (const [option, count] of Object.entries(data)) {
+                            results += `${option}: ${count} votes\n`;
+                        }
+                        document.getElementById("results").textContent = results;
+                    } else {
+                        document.getElementById("results").textContent = "Error fetching results: " + data.message;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("results").textContent = "Failed to fetch results. Please try again.";
+                });
+        }
+
+        // Automatically fetch results when the page loads
+        window.onload = fetchResults;
+    </script>
+
+
     <script>
         function submitVote() {
             const userId = document.getElementById("userId").value;
             const vote = document.getElementById("vote").value;
 
-            fetch('http://3.15.8.163:5000/vote', {
-                method: 'POST',
+            // Extract sessionGuid from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionGuid = urlParams.get("sessionGuid");
+
+            if (!sessionGuid) {
+                document.getElementById("results").textContent = "Session GUID is missing!";
+                return;
+            }
+
+            fetch("http://3.15.8.163:5000/vote", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ userId, vote })
+                body: JSON.stringify({ sessionGuid, userId, vote })
             })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         document.getElementById("results").textContent = "Vote submitted successfully!";
                     } else {
-                        document.getElementById("results").textContent = "An error occurred: " + data.message;
+                        document.getElementById("results").textContent = "Error: " + data.message;
                     }
                 })
                 .catch(error => {
