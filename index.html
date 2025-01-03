@@ -30,27 +30,27 @@
             alert("Missing session GUID or user ID!");
         }
 
-        function loadOptions() {
-            fetch(`http://3.15.8.163:5000/options?sessionGuid=${sessionGuid}`)
-                .then(response => response.json())
-                .then(data => {
-                    const voteSelect = document.getElementById("vote");
-                    voteSelect.innerHTML = "";
-                    if (data.success) {
-                        data.options.forEach(option => {
-                            const opt = document.createElement("option");
-                            opt.value = option;
-                            opt.textContent = option;
-                            voteSelect.appendChild(opt);
-                        });
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error("Error loading options:", error);
-                });
-        }
+        fetch(`http://3.15.8.163:5000/options?sessionGuid=${sessionGuid}`)
+            .then(response => response.json())
+            .then(data => {
+                const voteSelect = document.getElementById("vote");
+                voteSelect.innerHTML = ""; // Clear existing options
+
+                if (data.success) {
+                    data.options.forEach(option => {
+                        const opt = document.createElement("option");
+                        opt.value = option;
+                        opt.textContent = option;
+                        voteSelect.appendChild(opt);
+                    });
+                } else {
+                    voteSelect.innerHTML = `<option value="" disabled>${data.message}</option>`;
+                }
+            })
+            .catch(error => {
+                console.error("Error loading options:", error);
+                document.getElementById("results").textContent = "Failed to load options.";
+            });
 
         function submitVote() {
             const vote = document.getElementById("vote").value;
